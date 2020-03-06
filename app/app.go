@@ -126,21 +126,59 @@ func convertEl(n *html.Node, el *docs.StructuralElement) {
 		Data: tagForNamedStyle[el.Paragraph.ParagraphStyle.NamedStyleType],
 	}
 	for _, subel := range el.Paragraph.Elements {
-		// TODO subel.HorizontalRule
-		inner := &block
-		if subel.TextRun.TextStyle != nil && subel.TextRun.TextStyle.Link != nil {
-			// TODO bold, italic
-			inner = &html.Node{
-				Type: html.ElementNode,
-				Data: "a",
-				Attr: []html.Attribute{{"", "href", subel.TextRun.TextStyle.Link.Url}},
-			}
-			block.AppendChild(inner)
+		if subel.HorizontalRule != nil {
+			n.AppendChild(newElement("hr"))
 		}
-		inner.AppendChild(&html.Node{
-			Type: html.TextNode,
-			Data: subel.TextRun.Content,
-		})
+		if subel.TextRun == nil {
+			continue
+		}
+		inner := &block
+		if subel.TextRun.TextStyle != nil {
+			if subel.TextRun.TextStyle.Link != nil {
+				newinner := newElement("a", "href", subel.TextRun.TextStyle.Link.Url)
+				inner.AppendChild(newinner)
+				inner = newinner
+			}
+			if subel.TextRun.TextStyle.Bold {
+				newinner := newElement("strong")
+				inner.AppendChild(newinner)
+				inner = newinner
+			}
+			if subel.TextRun.TextStyle.Italic {
+				newinner := newElement("em")
+				inner.AppendChild(newinner)
+				inner = newinner
+			}
+		}
+		appendText(inner, subel.TextRun.Content)
 	}
 	n.AppendChild(&block)
+}
+
+func newElement(tag string, attrs ...string) *html.Node {
+	var attrslice []html.Attribute
+	if len(attrs) > 0 {
+		if len(attrs)%2 != 0 {
+			panic("uneven number of attr/value pairs")
+		}
+		attrslice = make([]html.Attribute, len(attrs)/2)
+		for i := range attrslice {
+			attrslice[i] = html.Attribute{
+				Key: attrs[i*2],
+				Val: attrs[i*2+1],
+			}
+		}
+	}
+	return &html.Node{
+		Type: html.ElementNode,
+		Data: tag,
+		Attr: attrslice,
+	}
+}
+
+func appendText(n *html.Node, text string) {
+	n.AppendChild(&html.Node{
+		Type: html.TextNode,
+		Data: text,
+	})
 }
