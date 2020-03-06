@@ -1,14 +1,16 @@
 package app
 
 import (
+	"context"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/carlmjohnson/flagext"
 	"github.com/peterbourgon/ff"
+	"google.golang.org/api/docs/v1"
 )
 
 const AppName = "gdocs"
@@ -27,14 +29,12 @@ func CLI(args []string) error {
 
 func (app *appEnv) ParseArgs(args []string) error {
 	fl := flag.NewFlagSet(AppName, flag.ContinueOnError)
-	src := flagext.FileOrURL(flagext.StdIO, nil)
-	app.src = src
-	fl.Var(src, "src", "source file or URL")
+	fl.StringVar(&app.docid, "id", "", "ID for Google Doc")
 	app.Logger = log.New(nil, AppName+" ", log.LstdFlags)
 	fl.Var(
-		flagext.Logger(app.Logger, flagext.LogVerbose),
-		"verbose",
-		`log debug output`,
+		flagext.Logger(app.Logger, flagext.LogSilent),
+		"silent",
+		`don't log debug output`,
 	)
 
 	fl.Usage = func() {
@@ -52,26 +52,39 @@ Options:
 	if err := ff.Parse(fl, args, ff.WithEnvVarPrefix("GO_CLI")); err != nil {
 		return err
 	}
+
+	app.docid = normalizeID(app.docid)
 	return nil
 }
 
 type appEnv struct {
-	src io.ReadCloser
+	docid string
 	*log.Logger
 }
 
 func (app *appEnv) Exec() (err error) {
-	app.Println("starting")
-	defer func() { app.Println("done") }()
+	app.Println("starting Google Docs service")
+	ctx := context.Background()
+	srv, err := docs.NewService(ctx)
+	if err != nil {
+		return err
+	}
 
-	n, err := io.Copy(os.Stdout, app.src)
-	defer func() {
-		e2 := app.src.Close()
-		if err == nil {
-			err = e2
-		}
-	}()
-	app.Printf("copied %d bytes\n", n)
+	app.Printf("getting %s", app.docid)
+	doc, err := srv.Documents.Get(app.docid).Do()
+	if err != nil {
+		return err
+	}
+
+	app.Printf("got doc %v", doc)
 
 	return err
+}
+
+func normalizeID(id string) string {
+	id = strings.TrimPrefix(id, "https://docs.google.com/document/d/")
+	if i := strings.LastIndexByte(id, '/'); i != -1 {
+		id = id[:i]
+	}
+	return id
 }
