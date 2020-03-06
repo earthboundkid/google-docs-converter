@@ -10,6 +10,7 @@ import (
 
 	"github.com/carlmjohnson/flagext"
 	"github.com/peterbourgon/ff"
+	"golang.org/x/net/html"
 	"google.golang.org/api/docs/v1"
 )
 
@@ -70,15 +71,17 @@ func (app *appEnv) Exec() (err error) {
 		return err
 	}
 
-	app.Printf("getting %s", app.docid)
+	app.Printf("getting %q", app.docid)
 	doc, err := srv.Documents.Get(app.docid).Do()
 	if err != nil {
 		return err
 	}
 
-	app.Printf("got doc %v", doc)
+	app.Printf("got %q", doc.Title)
 
-	return err
+	n := convert(doc)
+
+	return html.Render(os.Stdout, n)
 }
 
 func normalizeID(id string) string {
@@ -87,4 +90,57 @@ func normalizeID(id string) string {
 		id = id[:i]
 	}
 	return id
+}
+
+func convert(doc *docs.Document) (n *html.Node) {
+	n = &html.Node{
+		Type: html.ElementNode,
+		Data: "div",
+	}
+	for _, el := range doc.Body.Content {
+		convertEl(n, el)
+	}
+	return
+}
+
+var tagForNamedStyle = map[string]string{
+	"NAMED_STYLE_TYPE_UNSPECIFIED": "div",
+	"NORMAL_TEXT":                  "p",
+	"TITLE":                        "h1",
+	"SUBTITLE":                     "h1",
+	"HEADING_1":                    "h1",
+	"HEADING_2":                    "h2",
+	"HEADING_3":                    "h3",
+	"HEADING_4":                    "h4",
+	"HEADING_5":                    "h5",
+	"HEADING_6":                    "h6",
+}
+
+func convertEl(n *html.Node, el *docs.StructuralElement) {
+	if el.Paragraph == nil {
+		return
+	}
+
+	block := html.Node{
+		Type: html.ElementNode,
+		Data: tagForNamedStyle[el.Paragraph.ParagraphStyle.NamedStyleType],
+	}
+	for _, subel := range el.Paragraph.Elements {
+		// TODO subel.HorizontalRule
+		inner := &block
+		if subel.TextRun.TextStyle != nil && subel.TextRun.TextStyle.Link != nil {
+			// TODO bold, italic
+			inner = &html.Node{
+				Type: html.ElementNode,
+				Data: "a",
+				Attr: []html.Attribute{{"", "href", subel.TextRun.TextStyle.Link.Url}},
+			}
+			block.AppendChild(inner)
+		}
+		inner.AppendChild(&html.Node{
+			Type: html.TextNode,
+			Data: subel.TextRun.Content,
+		})
+	}
+	n.AppendChild(&block)
 }
