@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/carlmjohnson/exitcode"
-	"github.com/carlmjohnson/go-cli/app"
+	"github.com/carlmjohnson/google-docs-converter/app"
 )
 
 func main() {

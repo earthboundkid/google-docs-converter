@@ -1,4 +1,4 @@
-module github.com/carlmjohnson/go-cli
+module github.com/carlmjohnson/google-docs-converter
 
 go 1.13
 

@@ -11,7 +11,7 @@ import (
 	"github.com/peterbourgon/ff"
 )
 
-const AppName = "go-cli"
+const AppName = "gdocs"
 
 func CLI(args []string) error {
 	var app appEnv
@@ -38,11 +38,11 @@ func (app *appEnv) ParseArgs(args []string) error {
 	)
 
 	fl.Usage = func() {
-		fmt.Fprintf(fl.Output(), `go-cli - a Go CLI application template cat clone
+		fmt.Fprintf(fl.Output(), `gdocs - extracts a document from Google Docs
 
 Usage:
 
-	go-cli [options]
+	gdocs [options]
 
 Options:
 `)
