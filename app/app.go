@@ -94,8 +94,7 @@ func normalizeID(id string) string {
 
 func convert(doc *docs.Document) (n *html.Node) {
 	n = &html.Node{
-		Type: html.ElementNode,
-		Data: "div",
+		Type: html.DocumentNode,
 	}
 	for _, el := range doc.Body.Content {
 		convertEl(n, el)
@@ -125,12 +124,22 @@ func convertEl(n *html.Node, el *docs.StructuralElement) {
 		Type: html.ElementNode,
 		Data: tagForNamedStyle[el.Paragraph.ParagraphStyle.NamedStyleType],
 	}
+	sawHR := false
 	for _, subel := range el.Paragraph.Elements {
 		if subel.HorizontalRule != nil {
 			n.AppendChild(newElement("hr"))
+			sawHR = true
 		}
 		if subel.TextRun == nil {
 			continue
+		}
+		if sawHR {
+			sawHR = false
+			// GDocs allows HRs followed by text,
+			// which is not really a thing in HTML
+			if strings.TrimSpace(subel.TextRun.Content) == "" {
+				return
+			}
 		}
 		inner := &block
 		if subel.TextRun.TextStyle != nil {
