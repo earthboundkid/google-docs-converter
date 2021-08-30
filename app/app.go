@@ -127,8 +127,9 @@ func convert(doc *docs.Document) (n *html.Node) {
 		Type: html.DocumentNode,
 	}
 	listInfo := buildListInfo(doc.Lists)
+	objectInfo := buildObjectInfo(doc.InlineObjects)
 	for _, el := range doc.Body.Content {
-		convertEl(n, el, listInfo)
+		convertEl(n, el, listInfo, objectInfo)
 	}
 	return
 }
@@ -161,7 +162,27 @@ func buildListInfo(lists map[string]docs.List) map[string]string {
 	return m
 }
 
-func convertEl(n *html.Node, el *docs.StructuralElement, listInfo map[string]string) {
+func buildObjectInfo(objs map[string]docs.InlineObject) map[string][]string {
+	m := map[string][]string{}
+	for id, obj := range objs {
+		if obj.InlineObjectProperties == nil {
+			continue
+		}
+		innerObj := obj.InlineObjectProperties.EmbeddedObject
+		src := ""
+		if innerObj.ImageProperties != nil {
+			src = innerObj.ImageProperties.ContentUri
+		}
+		m[id] = []string{
+			"src", src,
+			"title", innerObj.Title,
+			"alt", innerObj.Description,
+		}
+	}
+	return m
+}
+
+func convertEl(n *html.Node, el *docs.StructuralElement, listInfo map[string]string, objInfo map[string][]string) {
 	if el.Table != nil && el.Table.TableRows != nil {
 		table := newElement("table")
 		n.AppendChild(table)
@@ -173,7 +194,7 @@ func convertEl(n *html.Node, el *docs.StructuralElement, listInfo map[string]str
 					cellEl := newElement("td")
 					rowEl.AppendChild(cellEl)
 					for _, content := range cell.Content {
-						convertEl(cellEl, content, listInfo)
+						convertEl(cellEl, content, listInfo, objInfo)
 					}
 				}
 			}
@@ -197,6 +218,12 @@ func convertEl(n *html.Node, el *docs.StructuralElement, listInfo map[string]str
 	for _, subel := range el.Paragraph.Elements {
 		if subel.HorizontalRule != nil {
 			n.AppendChild(newElement("hr"))
+		}
+
+		if subel.InlineObjectElement != nil {
+			inner := lastChildOrNewElement(n, blockType)
+			attrs := objInfo[subel.InlineObjectElement.InlineObjectId]
+			inner.AppendChild(newElement("img", attrs...))
 		}
 
 		if subel.TextRun == nil {
