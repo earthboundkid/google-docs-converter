@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -9,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/carlmjohnson/flagext"
-	"github.com/peterbourgon/ff"
 	"golang.org/x/net/html"
 	"google.golang.org/api/docs/v1"
 )
@@ -31,6 +31,9 @@ func CLI(args []string) error {
 func (app *appEnv) ParseArgs(args []string) error {
 	fl := flag.NewFlagSet(AppName, flag.ContinueOnError)
 	fl.StringVar(&app.docid, "id", "", "ID for Google Doc")
+	fl.StringVar(&app.outputDoc, "write-doc", "", "`path` to write out document")
+	fl.StringVar(&app.inputDoc, "read-doc", "", "`path` to read document from instead of Google Docs")
+
 	app.Logger = log.New(nil, AppName+" ", log.LstdFlags)
 	fl.Var(
 		flagext.Logger(app.Logger, flagext.LogSilent),
@@ -50,7 +53,10 @@ Options:
 		fl.PrintDefaults()
 		fmt.Fprintln(fl.Output(), "")
 	}
-	if err := ff.Parse(fl, args, ff.WithEnvVarPrefix("GO_CLI")); err != nil {
+	if err := fl.Parse(args); err != nil {
+		return err
+	}
+	if err := flagext.ParseEnv(fl, AppName); err != nil {
 		return err
 	}
 
@@ -59,22 +65,46 @@ Options:
 }
 
 type appEnv struct {
-	docid string
+	docid     string
+	inputDoc  string
+	outputDoc string
 	*log.Logger
 }
 
 func (app *appEnv) Exec() (err error) {
 	app.Println("starting Google Docs service")
 	ctx := context.Background()
-	srv, err := docs.NewService(ctx)
-	if err != nil {
-		return err
-	}
+	var doc *docs.Document
+	if app.inputDoc == "" {
+		srv, err := docs.NewService(ctx)
+		if err != nil {
+			return err
+		}
 
-	app.Printf("getting %q", app.docid)
-	doc, err := srv.Documents.Get(app.docid).Do()
-	if err != nil {
-		return err
+		app.Printf("getting %q", app.docid)
+		doc, err = srv.Documents.Get(app.docid).Do()
+		if err != nil {
+			return err
+		}
+		if app.outputDoc != "" {
+			b, err := json.MarshalIndent(doc, "", "  ")
+			if err != nil {
+				return err
+			}
+
+			if err = os.WriteFile(app.outputDoc, b, 0644); err != nil {
+				return err
+			}
+		}
+	} else {
+		app.Printf("reading %q", app.inputDoc)
+		b, err := os.ReadFile(app.inputDoc)
+		if err != nil {
+			return err
+		}
+		if err = json.Unmarshal(b, doc); err != nil {
+			return err
+		}
 	}
 
 	app.Printf("got %q", doc.Title)
@@ -96,8 +126,9 @@ func convert(doc *docs.Document) (n *html.Node) {
 	n = &html.Node{
 		Type: html.DocumentNode,
 	}
+	listInfo := buildListInfo(doc.Lists)
 	for _, el := range doc.Body.Content {
-		convertEl(n, el)
+		convertEl(n, el, listInfo)
 	}
 	return
 }
@@ -115,33 +146,68 @@ var tagForNamedStyle = map[string]string{
 	"HEADING_6":                    "h6",
 }
 
-func convertEl(n *html.Node, el *docs.StructuralElement) {
+func buildListInfo(lists map[string]docs.List) map[string]string {
+	m := map[string]string{}
+	for id, list := range lists {
+		if list.ListProperties == nil {
+			continue
+		}
+		listType := "ul"
+		if list.ListProperties.NestingLevels[0].GlyphType != "" {
+			listType = "ol"
+		}
+		m[id] = listType
+	}
+	return m
+}
+
+func convertEl(n *html.Node, el *docs.StructuralElement, listInfo map[string]string) {
+	if el.Table != nil && el.Table.TableRows != nil {
+		table := newElement("table")
+		n.AppendChild(table)
+		for _, row := range el.Table.TableRows {
+			rowEl := newElement("tr")
+			table.AppendChild(rowEl)
+			if row.TableCells != nil {
+				for _, cell := range row.TableCells {
+					cellEl := newElement("td")
+					rowEl.AppendChild(cellEl)
+					for _, content := range cell.Content {
+						convertEl(cellEl, content, listInfo)
+					}
+				}
+			}
+		}
+	}
 	if el.Paragraph == nil {
 		return
 	}
-
-	block := html.Node{
-		Type: html.ElementNode,
-		Data: tagForNamedStyle[el.Paragraph.ParagraphStyle.NamedStyleType],
+	if el.Paragraph.Bullet != nil {
+		listType := listInfo[el.Paragraph.Bullet.ListId]
+		ul := lastChildOrNewElement(n, listType)
+		li := newElement("li")
+		ul.AppendChild(li)
+		n = li
 	}
-	sawHR := false
+
+	blockType := tagForNamedStyle[el.Paragraph.ParagraphStyle.NamedStyleType]
+
+	n.AppendChild(newElement(blockType))
+
 	for _, subel := range el.Paragraph.Elements {
 		if subel.HorizontalRule != nil {
 			n.AppendChild(newElement("hr"))
-			sawHR = true
 		}
+
 		if subel.TextRun == nil {
 			continue
 		}
-		if sawHR {
-			sawHR = false
-			// GDocs allows HRs followed by text,
-			// which is not really a thing in HTML
-			if strings.TrimSpace(subel.TextRun.Content) == "" {
-				return
-			}
+
+		if strings.TrimSpace(subel.TextRun.Content) == "" {
+			continue
 		}
-		inner := &block
+
+		inner := lastChildOrNewElement(n, blockType)
 		if subel.TextRun.TextStyle != nil {
 			if subel.TextRun.TextStyle.Link != nil {
 				newinner := newElement("a", "href", subel.TextRun.TextStyle.Link.Url)
@@ -161,7 +227,6 @@ func convertEl(n *html.Node, el *docs.StructuralElement) {
 		}
 		appendText(inner, subel.TextRun.Content)
 	}
-	n.AppendChild(&block)
 }
 
 func newElement(tag string, attrs ...string) *html.Node {
@@ -183,6 +248,15 @@ func newElement(tag string, attrs ...string) *html.Node {
 		Data: tag,
 		Attr: attrslice,
 	}
+}
+
+func lastChildOrNewElement(p *html.Node, tag string, attrs ...string) *html.Node {
+	if p.LastChild != nil && p.LastChild.Data == tag {
+		return p.LastChild
+	}
+	n := newElement(tag, attrs...)
+	p.AppendChild(n)
+	return n
 }
 
 func appendText(n *html.Node, text string) {
