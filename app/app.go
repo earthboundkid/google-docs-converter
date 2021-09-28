@@ -236,6 +236,11 @@ func convertEl(n *html.Node, el *docs.StructuralElement, listInfo map[string]str
 
 		inner := lastChildOrNewElement(n, blockType)
 		if subel.TextRun.TextStyle != nil {
+			if len(subel.TextRun.SuggestedDeletionIds) > 0 {
+				newinner := newElement("del")
+				inner.AppendChild(newinner)
+				inner = newinner
+			}
 			if subel.TextRun.TextStyle.Link != nil {
 				newinner := newElement("a", "href", subel.TextRun.TextStyle.Link.Url)
 				inner.AppendChild(newinner)
