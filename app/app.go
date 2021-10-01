@@ -12,6 +12,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"os/exec"
+	"runtime/debug"
 	"strings"
 
 	"github.com/carlmjohnson/flagext"
@@ -27,9 +28,10 @@ const AppName = "gdocs"
 func CLI(args []string) error {
 	var app appEnv
 	err := app.ParseArgs(args)
-	if err == nil {
-		err = app.Exec()
+	if err != nil {
+		return err
 	}
+	err = app.Exec()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
@@ -52,7 +54,7 @@ func (app *appEnv) ParseArgs(args []string) error {
 	)
 
 	fl.Usage = func() {
-		fmt.Fprintf(fl.Output(), `gdocs - extracts a document from Google Docs
+		fmt.Fprintf(fl.Output(), `gdocs %s - extracts a document from Google Docs
 
 Usage:
 
@@ -64,7 +66,7 @@ https://developers.google.com/accounts/docs/application-default-credentials
 https://developers.google.com/identity/protocols/oauth2
 
 Options:
-`)
+`, getVersion())
 		fl.PrintDefaults()
 		fmt.Fprintln(fl.Output(), "")
 	}
@@ -77,6 +79,14 @@ Options:
 
 	app.docid = normalizeID(app.docid)
 	return nil
+}
+
+func getVersion() string {
+	if i, ok := debug.ReadBuildInfo(); ok {
+		return i.Main.Version
+	}
+
+	return "(unknown)"
 }
 
 type appEnv struct {
