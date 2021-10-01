@@ -141,9 +141,7 @@ func (app *appEnv) Exec() (err error) {
 
 func normalizeID(id string) string {
 	id = strings.TrimPrefix(id, "https://docs.google.com/document/d/")
-	if i := strings.LastIndexByte(id, '/'); i != -1 {
-		id = id[:i]
-	}
+	id, _, _ = cut(id, "/")
 	return id
 }
 
@@ -379,4 +377,12 @@ func (app *appEnv) oauthClient(ctx context.Context) (client *http.Client, err er
 		return nil, err
 	}
 	return conf.Client(ctx, tok), nil
+}
+
+// See https://github.com/golang/go/issues/46336
+func cut(s, sep string) (before, after string, found bool) {
+	if i := strings.Index(s, sep); i >= 0 {
+		return s[:i], s[i+len(sep):], true
+	}
+	return s, "", false
 }
