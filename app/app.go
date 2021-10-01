@@ -253,10 +253,6 @@ func convertEl(n *html.Node, el *docs.StructuralElement, listInfo map[string]str
 			continue
 		}
 
-		if strings.TrimSpace(subel.TextRun.Content) == "" {
-			continue
-		}
-
 		inner := lastChildOrNewElement(n, blockType)
 		if subel.TextRun.TextStyle != nil {
 			if len(subel.TextRun.SuggestedDeletionIds) > 0 {
