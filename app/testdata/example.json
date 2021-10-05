@@ -1789,6 +1789,56 @@
           }
         },
         "startIndex": 310
+      },
+      {
+        "endIndex": 347,
+        "paragraph": {
+          "elements": [
+            {
+              "endIndex": 347,
+              "startIndex": 346,
+              "textRun": {
+                "content": "\n",
+                "textStyle": {}
+              }
+            }
+          ],
+          "paragraphStyle": {
+            "direction": "LEFT_TO_RIGHT",
+            "namedStyleType": "NORMAL_TEXT"
+          }
+        },
+        "startIndex": 346
+      },
+      {
+        "endIndex": 371,
+        "paragraph": {
+          "elements": [
+            {
+              "endIndex": 371,
+              "startIndex": 347,
+              "textRun": {
+                "content": "Highlights for Children\n",
+                "textStyle": {
+                  "backgroundColor": {
+                    "color": {
+                      "rgbColor": {
+                        "green": 1,
+                        "red": 1
+                      }
+                    }
+                  },
+                  "underline": true
+                }
+              }
+            }
+          ],
+          "paragraphStyle": {
+            "direction": "LEFT_TO_RIGHT",
+            "namedStyleType": "NORMAL_TEXT"
+          }
+        },
+        "startIndex": 347
       }
     ]
   },
@@ -1851,7 +1901,7 @@
             }
           },
           "imageProperties": {
-            "contentUri": "https://lh5.googleusercontent.com/8VlEpyEh31s2ZtlJTOPhXknw_f8zp_oOE-bVm9LySlatBZbZrgEvCmgADSX0vyTZzgisD6U7adW3Nwp452ERnQtU0HDi8ax2-CLgZh3zfOp_EI92X2KntRIUB364Hhwg-V4oFoRb64OxoZL-iw=s0",
+            "contentUri": "https://lh3.googleusercontent.com/bFaNcbOEgAqFCE5Ns4uIeBy52uiblhQhb0DQ7GwQ55xeePpjZa0MJXprdnd1J17nrYpdgL1FZmbYXHs_oDdO1yLEX_0SyJfFsFiVOiNM079Ym8HNQRZPKGQZEvMhbbL8okqdqEza-TomEHxWUg=s0",
             "cropProperties": {},
             "sourceUri": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Cute_Monkey_cropped.jpg/576px-Cute_Monkey_cropped.jpg"
           },
@@ -2502,7 +2552,7 @@
       }
     ]
   },
-  "revisionId": "ALm37BUhl_Uw7T6XqkauNh42IixISdKHRd5HfEP4oapPAJTLXDBxRXRgHWWLdgeYSK-8Wc0ezR9GdUMuC_Z8jw",
+  "revisionId": "ALm37BWZreYq0BYgBo1IYQ77zlVgKuxyamESuYpFBH_jyvQnQFcG0olftlgE-aEfDDhF8zT0DzfjQuoE63qMGQ",
   "suggestionsViewMode": "SUGGESTIONS_INLINE",
   "title": "Test document"
 }

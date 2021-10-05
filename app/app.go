@@ -280,6 +280,11 @@ func convertEl(n *html.Node, el *docs.StructuralElement, listInfo map[string]str
 				inner.AppendChild(newinner)
 				inner = newinner
 			}
+			if subel.TextRun.TextStyle.BackgroundColor != nil {
+				newinner := newElement("mark")
+				inner.AppendChild(newinner)
+				inner = newinner
+			}
 			if subel.TextRun.TextStyle.Bold {
 				newinner := newElement("strong")
 				inner.AppendChild(newinner)
@@ -287,6 +292,11 @@ func convertEl(n *html.Node, el *docs.StructuralElement, listInfo map[string]str
 			}
 			if subel.TextRun.TextStyle.Italic {
 				newinner := newElement("em")
+				inner.AppendChild(newinner)
+				inner = newinner
+			}
+			if subel.TextRun.TextStyle.Underline && subel.TextRun.TextStyle.Link == nil {
+				newinner := newElement("u")
 				inner.AppendChild(newinner)
 				inner = newinner
 			}
