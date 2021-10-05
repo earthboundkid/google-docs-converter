@@ -265,6 +265,11 @@ func convertEl(n *html.Node, el *docs.StructuralElement, listInfo map[string]str
 
 		inner := lastChildOrNewElement(n, blockType)
 		if subel.TextRun.TextStyle != nil {
+			if len(subel.TextRun.SuggestedInsertionIds) > 0 {
+				newinner := newElement("ins")
+				inner.AppendChild(newinner)
+				inner = newinner
+			}
 			if len(subel.TextRun.SuggestedDeletionIds) > 0 {
 				newinner := newElement("del")
 				inner.AppendChild(newinner)

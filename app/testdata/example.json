@@ -1733,20 +1733,39 @@
         "startIndex": 309
       },
       {
-        "endIndex": 343,
+        "endIndex": 346,
         "paragraph": {
           "elements": [
             {
-              "endIndex": 324,
+              "endIndex": 311,
               "startIndex": 310,
               "textRun": {
-                "content": "I suggest you ",
+                "content": "I",
                 "textStyle": {}
               }
             },
             {
-              "endIndex": 330,
-              "startIndex": 324,
+              "endIndex": 314,
+              "startIndex": 311,
+              "textRun": {
+                "content": " do",
+                "suggestedInsertionIds": [
+                  "suggest.s2zxc3etm4ky"
+                ],
+                "textStyle": {}
+              }
+            },
+            {
+              "endIndex": 327,
+              "startIndex": 314,
+              "textRun": {
+                "content": " suggest you ",
+                "textStyle": {}
+              }
+            },
+            {
+              "endIndex": 333,
+              "startIndex": 327,
               "textRun": {
                 "content": "don’t ",
                 "suggestedDeletionIds": [
@@ -1756,8 +1775,8 @@
               }
             },
             {
-              "endIndex": 343,
-              "startIndex": 330,
+              "endIndex": 346,
+              "startIndex": 333,
               "textRun": {
                 "content": "delete that.\n",
                 "textStyle": {}
@@ -1832,7 +1851,7 @@
             }
           },
           "imageProperties": {
-            "contentUri": "https://lh6.googleusercontent.com/gARknhY3sroKmcCcC61NdDuR4-eQ2pi62FPZCcnENZkIiLZAWkSqaCyYz-_mM7197rH2txbBcfk7weJvhI7LmpJwsc_FLQxv2CExjd96BeMJimlS1wlPxyV-dLpvi6pjsAU3EZzjl2n9WyidDw=s0",
+            "contentUri": "https://lh5.googleusercontent.com/8VlEpyEh31s2ZtlJTOPhXknw_f8zp_oOE-bVm9LySlatBZbZrgEvCmgADSX0vyTZzgisD6U7adW3Nwp452ERnQtU0HDi8ax2-CLgZh3zfOp_EI92X2KntRIUB364Hhwg-V4oFoRb64OxoZL-iw=s0",
             "cropProperties": {},
             "sourceUri": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Cute_Monkey_cropped.jpg/576px-Cute_Monkey_cropped.jpg"
           },
@@ -2483,7 +2502,7 @@
       }
     ]
   },
-  "revisionId": "ALm37BUpjjiouiqQu9bizFCucL4nq9ybwje96uAOkM5GCUyeS22Mgsr2ic4vCy8bd1Dp71m9nj1KzaXkTYE1sQ",
+  "revisionId": "ALm37BUhl_Uw7T6XqkauNh42IixISdKHRd5HfEP4oapPAJTLXDBxRXRgHWWLdgeYSK-8Wc0ezR9GdUMuC_Z8jw",
   "suggestionsViewMode": "SUGGESTIONS_INLINE",
   "title": "Test document"
 }
